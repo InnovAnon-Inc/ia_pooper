@@ -103,7 +103,7 @@ minetest.register_abm(
 			else
 				local health_initial = player:get_hp()
 				local health_drain = health_initial - 0.5
-				if health_drain > 2 then
+				if health_drain > 2 then -- TODO parametrize
 					minetest.log('pooper suffocating: '..playername..', hp: '..health_drain)
 					player:set_hp(health_drain)
 				end
