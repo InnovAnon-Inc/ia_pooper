@@ -88,10 +88,13 @@ minetest.register_abm(
 	local objects = minetest.get_objects_inside_radius(pos, 5) -- TODO parametrize
 	-- Poll players for names to pass to set_breath()
 	for i, obj in ipairs(objects) do
-		if (obj:is_player()) then
-			local playername     = obj:get_player_name()
+		local player = fakelib.get_player_interface(obj)
+		--if (obj:is_player()) then
+		if player then
+			--local playername     = obj:get_player_name()
+			local playername = player:get_player_name()
 			minetest.log('pooper suffocating: '..playername)
-			local player         = minetest.get_player_by_name(playername)
+			--local player         = minetest.get_player_by_name(playername)
 			local breath_initial = player:get_breath()
 			local depletion      = breath_initial - 1
 			if breath_initial > 1 then
