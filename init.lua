@@ -90,15 +90,18 @@ minetest.register_abm(
 	for i, obj in ipairs(objects) do
 		if (obj:is_player()) then
 			local playername     = obj:get_player_name()
+			minetest.log('pooper suffocating: '..playername)
 			local player         = minetest.get_player_by_name(playername)
 			local breath_initial = player:get_breath()
 			local depletion      = breath_initial - 1
-			if breath > 1 then
+			if breath_initial > 1 then
+				minetest.log('pooper suffocating: '..playername..', breath: '..depletion)
 				player:set_breath(depletion)
 			else
 				local health_initial = player:get_hp()
 				local health_drain = health_initial - 0.5
 				if health_drain > 2 then
+					minetest.log('pooper suffocating: '..playername..', hp: '..health_drain)
 					player:set_hp(health_drain)
 				end
 			end
