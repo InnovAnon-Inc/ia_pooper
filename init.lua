@@ -1,8 +1,29 @@
-if minetest.get_current_modname() ~= "pooper" then
-   error("mod directory must be named 'pooper'");
+ia_pooper = {}
+
+local function play_sound(soundname, playername, max_hear_distance)
+	local player = minetest.get_player_by_name(playername)
+	local pos    = player:get_pos()
+	minetest.sound_play(soundname, {pos=pos, gain = 1.0, max_hear_distance = max_hear_distance,})
+end
+function ia_pooper.play_rumble_sound(playername)
+	play_sound("poop_rumble", playername, 10)
+end
+function ia_pooper.play_defecate_sound(playername)
+	play_sound("poop_defecate", playername, 10)
 end
 
-dofile(minetest.get_modpath("pooper") .. "/keybind.lua")
+function ia_pooper.defecate(playername)
+	local player = minetest.get_player_by_name(playername)
+	local pos    = player:get_pos()
+	minetest.add_item(pos, "pooper:poop_turd")
+end
+
+function ia_pooper.defecate_soon(playername, dt)
+	ia_pooper.play_rumble_sound(playername)
+	minetest.after(dt, function()
+		ia_pooper.defecate(playername)
+	end)
+end
 
 minetest.register_node("pooper:poop_pile", {
 	description = "Pile of Feces",
@@ -15,7 +36,8 @@ minetest.register_node("pooper:poop_pile", {
 minetest.register_craftitem("pooper:poop_turd", {
 	description = "Feces",
 	inventory_image = "poop_turd.png",
-	on_use = minetest.item_eat(1)
+	--on_use = minetest.item_eat(1)
+	on_use = minetest.item_eat(0) -- TODO poison mod compatibility
 })
 
 minetest.register_craftitem("pooper:digestive_agent", {
@@ -49,72 +71,13 @@ minetest.register_craft({
 	recipe = "pooper:digestive_agent"
 })
 
-MIN_TIME_BETWEEN_PLAYER_POOP = 3600
-FOOD_FILLS_BOWELS_BY = 600
-
--- Spawn stool at player location
-local defecate = function(amount, player)
-	if amount <= MIN_TIME_BETWEEN_PLAYER_POOP then
-		minetest.chat_send_player(player, "Your bowels are empty!")
-	else
-		minetest.sound_play("poop_defecate", {pos=minetest.get_player_by_name(player):getpos(), gain = 1.0, max_hear_distance = 10,})
-		minetest.add_item(minetest.get_player_by_name(player):getpos(), "pooper:poop_turd")
-	end
-end
-
-local player_bowels = {}
-local bowel_variance = {}
-
-minetest.register_globalstep(function(dtime)
-	for _, user in pairs(minetest.get_connected_players()) do
-		local player = user:get_player_name()
-		-- Sets initial bowel level when first iterating over this loop
-		if player_bowels[player] == nil then
-			player_bowels[player] = math.random(1, MIN_TIME_BETWEEN_PLAYER_POOP - 1)
-		end
-		if bowel_variance[player] == nil then
-			bowel_variance[player] = math.random(800, 2000)
-		end
-		player_bowels[player] = player_bowels[player] + 1 --dtime
-		-- Defecate at least every X seconds
-		if player_bowels[player] >= MIN_TIME_BETWEEN_PLAYER_POOP + bowel_variance[player] then
-			defecate(player_bowels[player], player)
-			player_bowels[player] = 0
-			bowel_variance[player] = math.random(800, 2000)
-		end
-		-- Gut growls to notify player of readiness to defecate
-		if player_bowels[player] == MIN_TIME_BETWEEN_PLAYER_POOP then
-			minetest.sound_play("poop_rumble", {pos=minetest.get_player_by_name(player):getpos(), gain = 1.0, max_hear_distance = 10,})
-		end
-	end
-end)
-
--- Empty bowels when manual defecate is called
-get_bowel_level = function(who)
-	local player = who
-	local snapshot = player_bowels[player]
-	-- Check whether bowels have filled sufficiently or not
-	if player_bowels[player] > MIN_TIME_BETWEEN_PLAYER_POOP then
-		player_bowels[player] = 0
-	end
-	return snapshot
-end
-
--- Manually defecate when sneak key is pressed
-minetest.register_on_key_press(function(player, key)
-	local pooper = player:get_player_name()
-	if key == "aux1" then
-		defecate(get_bowel_level(pooper), pooper)
-	end
-end)
-
 -- Eating food item increases bowel level
-minetest.register_on_item_eat(function(hp_change, replace_with_item, itemstack, user, pointed_thing)
-	minetest.after(5, function()
-		local player = user:get_player_name()
-		player_bowels[player] = player_bowels[player] + FOOD_FILLS_BOWELS_BY
-	end)
-end)
+--minetest.register_on_item_eat(function(hp_change, replace_with_item, itemstack, user, pointed_thing)
+--	minetest.after(5, function()
+--		local player = user:get_player_name()
+--		player_bowels[player] = player_bowels[player] + FOOD_FILLS_BOWELS_BY
+--	end)
+--end)
 
 minetest.register_abm(
 	{nodenames = {"pooper:poop_pile"},
@@ -122,18 +85,21 @@ minetest.register_abm(
 	chance = 1,
 	-- Suffocate players within a 5 node radius of "poop_pile"
 	action = function(pos)
-	local objects = minetest.get_objects_inside_radius(pos, 5)
+	local objects = minetest.get_objects_inside_radius(pos, 5) -- TODO parametrize
 	-- Poll players for names to pass to set_breath()
 	for i, obj in ipairs(objects) do
 		if (obj:is_player()) then
-			local depletion = minetest.get_player_by_name(obj:get_player_name()):get_breath() - 1
-			if minetest.get_player_by_name(obj:get_player_name()):get_breath() > 1 then
-				minetest.get_player_by_name(obj:get_player_name()):set_breath(depletion)
+			local playername     = obj:get_player_name()
+			local player         = minetest.get_player_by_name(playername)
+			local breath_initial = player:get_breath()
+			local depletion      = breath_initial - 1
+			if breath > 1 then
+				player:set_breath(depletion)
 			else
-				local health_initial = minetest.get_player_by_name(obj:get_player_name()):get_hp()
+				local health_initial = player:get_hp()
 				local health_drain = health_initial - 0.5
 				if health_drain > 2 then
-					minetest.get_player_by_name(obj:get_player_name()):set_hp(health_drain)
+					player:set_hp(health_drain)
 				end
 			end
 		end
@@ -142,31 +108,27 @@ end,
 })
 
 -- Clear player bowels on death
-minetest.register_on_dieplayer(function(player)
-	-- Such a low number to minimize likelihood of idle dead players pooping
-	player_bowels[player:get_player_name()] = -90000
-end)
-
--- Clear player bowels on respawn
-minetest.register_on_respawnplayer(function(player)
-	player_bowels[player:get_player_name()] = 0
-end)
+--minetest.register_on_dieplayer(function(player)
+--	-- Such a low number to minimize likelihood of idle dead players pooping
+--	player_bowels[player:get_player_name()] = -90000
+--end)
+--
+---- Clear player bowels on respawn
+--minetest.register_on_respawnplayer(function(player)
+--	player_bowels[player:get_player_name()] = 0
+--end)
 
 minetest.register_craftitem("pooper:laxative", {
 	description = "Laxative",
 	inventory_image = "laxative.png",
 	stack_max = 1,
-	on_use = function(itemstack, user, pointed_thing)
+	on_use = function(itemstack, user, pointed_thing) -- TODO hunger mod compatibility
 		--replace_with_item = "vessels:glass_bottle"
+		local playername = user:get_player_name()
 		minetest.do_item_eat(0, "vessels:glass_bottle", itemstack, user, pointed_thing)
-		minetest.chat_send_player(user:get_player_name(), "You suddenly do not feel well...")
-		minetest.sound_play("poop_rumble")
-		for q = 1, 5 do
-			minetest.after(math.random(4,8), function()
-				defecate(999999, user:get_player_name())
-			end)
-		end
+		minetest.chat_send_player(playername, "You suddenly do not feel well...")
+		ia_pooper.defecate_soon(playername, math.random(4,8)) -- TODO integrate with hunger mod ?
 		itemstack:take_item()
-			return "vessels:glass_bottle"
+		return "vessels:glass_bottle"
 	end
 })
