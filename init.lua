@@ -1,8 +1,11 @@
 ia_pooper = {}
 
 local function play_sound(soundname, playername, max_hear_distance)
-	local player = minetest.get_player_by_name(playername)
+	--local player = minetest.get_player_by_name(playername)
+	local player = ia_names.get_actor_by_name(playername)
+	assert(player ~= nil)
 	local pos    = player:get_pos()
+	assert(pos ~= nil)
 	minetest.sound_play(soundname, {pos=pos, gain = 1.0, max_hear_distance = max_hear_distance,})
 end
 function ia_pooper.play_rumble_sound(playername)
@@ -13,8 +16,12 @@ function ia_pooper.play_defecate_sound(playername)
 end
 
 function ia_pooper.defecate(playername)
-	local player = minetest.get_player_by_name(playername)
+	--local player = minetest.get_player_by_name(playername)
+	local player = ia_names.get_actor_by_name(playername)
+	assert(player ~= nil)
 	local pos    = player:get_pos()
+	assert(pos ~= nil)
+	-- TODO attach playername to meta
 	minetest.add_item(pos, "pooper:poop_turd")
 end
 
