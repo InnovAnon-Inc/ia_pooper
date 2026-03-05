@@ -1,8 +1,8 @@
 ia_pooper = {}
 
 local function play_sound(soundname, playername, max_hear_distance)
-	--local player = minetest.get_player_by_name(playername)
-	local player = ia_names.get_actor_by_name(playername)
+	local player = minetest.get_player_by_name(playername)
+	--local player = ia_names.get_actor_by_name(playername)
 	assert(player ~= nil)
 	local pos    = player:get_pos()
 	assert(pos ~= nil)
@@ -16,8 +16,8 @@ function ia_pooper.play_defecate_sound(playername)
 end
 
 function ia_pooper.defecate(playername)
-	--local player = minetest.get_player_by_name(playername)
-	local player = ia_names.get_actor_by_name(playername)
+	local player = minetest.get_player_by_name(playername)
+	--local player = ia_names.get_actor_by_name(playername)
 	assert(player ~= nil)
 	local pos    = player:get_pos()
 	assert(pos ~= nil)
@@ -95,9 +95,9 @@ minetest.register_abm(
 	local objects = minetest.get_objects_inside_radius(pos, 5) -- TODO parametrize
 	-- Poll players for names to pass to set_breath()
 	for i, obj in ipairs(objects) do
-		local player = fakelib.get_player_interface(obj)
-		--if (obj:is_player()) then
-		if player then
+		--local player = fakelib.get_player_interface(obj)
+		if (obj:is_player()) then
+		--if player then
 			--local playername     = obj:get_player_name()
 			local playername = player:get_player_name()
 			minetest.log('pooper suffocating: '..playername)
@@ -145,3 +145,8 @@ minetest.register_craftitem("pooper:laxative", {
 		return "vessels:glass_bottle"
 	end
 })
+
+if minetest.get_modpath('composting') then
+  --composting.add_composting_data('pooper:poop_turd', 1, 1) -- TODO adjust numeric params -- FIXME can't use on composter; eats poop instead
+  composting.add_composting_data('pooper:poop_pile', 4, 1) -- TODO adjust numeric params
+end
