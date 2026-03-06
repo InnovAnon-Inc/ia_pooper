@@ -146,7 +146,7 @@ minetest.register_craftitem("pooper:laxative", {
 	end
 })
 
-if minetest.get_modpath('composting') then
-  --composting.add_composting_data('pooper:poop_turd', 1, 1) -- TODO adjust numeric params -- FIXME can't use on composter; eats poop instead
-  composting.add_composting_data('pooper:poop_pile', 4, 1) -- TODO adjust numeric params
-end
+--if minetest.get_modpath('composting') then
+--  --composting.add_composting_data('pooper:poop_turd', 1, 1) -- TODO adjust numeric params -- FIXME can't use on composter; eats poop instead
+--  composting.add_composting_data('pooper:poop_pile', 4, 1) -- TODO adjust numeric params
+--end
