@@ -1,3 +1,5 @@
+-- ia_pooper/init.lua
+
 ia_pooper = {}
 
 local function play_sound(soundname, playername, max_hear_distance)
