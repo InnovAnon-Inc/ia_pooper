@@ -1,6 +1,7 @@
 -- ia_pooper/init.lua
 
-ia_pooper = {}
+pooper = {}
+pooper.mod = 'ia'
 
 local function play_sound(soundname, playername, max_hear_distance)
 	local player = minetest.get_player_by_name(playername)
@@ -10,14 +11,14 @@ local function play_sound(soundname, playername, max_hear_distance)
 	assert(pos ~= nil)
 	minetest.sound_play(soundname, {pos=pos, gain = 1.0, max_hear_distance = max_hear_distance,})
 end
-function ia_pooper.play_rumble_sound(playername)
+function pooper.play_rumble_sound(playername)
 	play_sound("poop_rumble", playername, 10)
 end
-function ia_pooper.play_defecate_sound(playername)
+function pooper.play_defecate_sound(playername)
 	play_sound("poop_defecate", playername, 10)
 end
 
-function ia_pooper.defecate(playername)
+function pooper.defecate(playername)
 	local player = minetest.get_player_by_name(playername)
 	--local player = ia_names.get_actor_by_name(playername)
 	assert(player ~= nil)
@@ -27,10 +28,10 @@ function ia_pooper.defecate(playername)
 	minetest.add_item(pos, "pooper:poop_turd")
 end
 
-function ia_pooper.defecate_soon(playername, dt)
-	ia_pooper.play_rumble_sound(playername)
+function pooper.defecate_soon(playername, dt)
+	pooper.play_rumble_sound(playername)
 	minetest.after(dt, function()
-		ia_pooper.defecate(playername)
+		pooper.defecate(playername)
 	end)
 end
 
@@ -142,7 +143,7 @@ minetest.register_craftitem("pooper:laxative", {
 		local playername = user:get_player_name()
 		minetest.do_item_eat(0, "vessels:glass_bottle", itemstack, user, pointed_thing)
 		minetest.chat_send_player(playername, "You suddenly do not feel well...")
-		ia_pooper.defecate_soon(playername, math.random(4,8)) -- TODO integrate with hunger mod ?
+		pooper.defecate_soon(playername, math.random(4,8)) -- TODO integrate with hunger mod ?
 		itemstack:take_item()
 		return "vessels:glass_bottle"
 	end
