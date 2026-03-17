@@ -37,17 +37,27 @@ end
 
 minetest.register_node("pooper:poop_pile", {
 	description = "Pile of Feces",
-	tiles = {"poop_pile.png"},
-	groups = {crumbly = 3, soil = 1, falling_node = 1},
-	drop = "pooper:poop_turd" .. " 4",
-	sounds = default.node_sound_dirt_defaults(),
+	tiles       = {"poop_pile.png"},
+	groups      = {crumbly = 3, soil = 1, falling_node = 1},
+	drop        = "pooper:poop_turd" .. " 4",
+	sounds      = default.node_sound_dirt_defaults(),
+        --_compost    = { -- TODO
+        --  amount = amount,
+        --  C      = C,
+        --  N      = N,
+        --},
 })
 
 minetest.register_craftitem("pooper:poop_turd", {
-	description = "Feces",
+	description     = "Feces",
 	inventory_image = "poop_turd.png",
 	--on_use = minetest.item_eat(1)
-	on_use = minetest.item_eat(0) -- TODO poison mod compatibility
+	on_use          = minetest.item_eat(0), -- TODO poison mod compatibility
+        --_compost        = { -- TODO
+        --  amount = amount,
+        --  C      = C,
+        --  N      = N,
+        --},
 })
 
 minetest.register_craftitem("pooper:digestive_agent", {
